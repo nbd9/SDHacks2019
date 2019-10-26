@@ -29,6 +29,8 @@
     "extra": {
       "serverUri": "ws://localhost:2567",
       "awsRegion": "us-west-2",
+      "awsAccessKey": "AKIAY25MHQXNQVSQWMJQ",
+      "awsSecretKey": "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"
     }
   }
 }
