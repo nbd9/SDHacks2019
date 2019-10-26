@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
+import { StyleSheet, Dimensions, View, Animated } from 'react-native';
 import MapView, { Circle } from 'react-native-maps';
-import { StyleSheet, Dimensions, View } from 'react-native';
 import { Audio } from 'expo-av';
 import AWS from 'aws-sdk'
 import Constants from 'expo-constants';
@@ -8,6 +8,7 @@ import * as geolib from 'geolib';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import * as Colyseus from 'colyseus.js'
+import Hurting from '../Components/hurting';
 
 interface Coordinate {
     latitude: number;
@@ -30,14 +31,17 @@ interface GameState {
     };
     zones: Zone[];
 }
+interface State extends GameState {
+    hurtOpacity: Animated.AnimatedValue;
+    currentPos: Coordinate;
+}
 
-export default class MainScreen extends Component<{}, GameState> {
+export default class MainScreen extends Component<{}, State> {
     colyseusClient: Colyseus.Client;
     pollyClient = new AWS.Polly.Presigner();
     room: Colyseus.Room<GameState>;
     mapView = React.createRef<MapView>();
     passedFirstUpdate = false;
-    currentPos: Coordinate;
     
     async componentDidMount() {
         this.colyseusClient = new Colyseus.Client(Constants.manifest.extra.serverUri);
@@ -52,7 +56,9 @@ export default class MainScreen extends Component<{}, GameState> {
         Location.watchPositionAsync({
             accuracy: Location.Accuracy.Balanced
         }, location => {
-            this.currentPos = location.coords;
+            this.setState({
+                currentPos: location.coords,
+            });
 
             if (!this.room) {
                 this.setupRoom(location.coords)
@@ -72,6 +78,7 @@ export default class MainScreen extends Component<{}, GameState> {
         this.mapView.current.animateCamera({
             center: coords,
             altitude: 5000,
+            zoom: 50,
         });
 
         this.room = await this.colyseusClient.joinOrCreate('zones_room', {
@@ -85,19 +92,20 @@ export default class MainScreen extends Component<{}, GameState> {
                 return;
             }
 
-            if ((state.zones.length == 1 && !this.state) || (this.state && state.zones.length !== this.state.zones.length)) {
+            console.log(this.state)
+            if ((state.zones.length == 1 && (!this.state || !this.state.zones)) || (this.state && (state.zones.length !== this.state.zones.length))) {
                 let currentView = await this.mapView.current.getCamera()
                 let newZone = state.zones[state.zones.length - 1];
 
                 let direction = geolib
-                    .getCompassDirection(this.currentPos, newZone.center)
+                    .getCompassDirection(this.state.currentPos, newZone.center)
                     .replace('N', 'North ')
                     .replace('S', 'South ')
                     .replace('W', 'West ')
                     .replace('E', 'East ')
                     .trimEnd();
-                let distance = geolib.getPreciseDistance(this.currentPos, newZone.center) - newZone.radius_meters;
-                let safe = geolib.isPointWithinRadius(this.currentPos, newZone.center, newZone.radius_meters);
+                let distance = geolib.getPreciseDistance(this.state.currentPos, newZone.center) - newZone.radius_meters;
+                let safe = geolib.isPointWithinRadius(this.state.currentPos, newZone.center, newZone.radius_meters);
 
                 let announcement = safe 
                     ? `New zone is active, and you're already in the next zone. Stay safe!`
@@ -133,8 +141,19 @@ export default class MainScreen extends Component<{}, GameState> {
     }
     
     render() {
+        let currentActiveZone = 
+            this.state 
+            && this.state.zones
+            && this.state.zones.length > 1 
+            && this.state.zones[this.state.zones.length - 2]
+        let takingDamage = 
+            currentActiveZone
+            && !geolib.isPointWithinRadius(this.state.currentPos, currentActiveZone.center, currentActiveZone.radius_meters)
+        
         return (
         <View style={styles.container}>
+            <Hurting takingDamage={takingDamage} />
+
             <MapView 
                 style={{
                     width: Dimensions.get('window').width,
@@ -145,7 +164,7 @@ export default class MainScreen extends Component<{}, GameState> {
             >
                 {
                     this.state && this.state.zones && this.state.zones.slice(this.state.zones.length - 2).map((zone, i) => {
-                        let safe = geolib.isPointWithinRadius(this.currentPos, zone.center, zone.radius_meters);
+                        let safe = geolib.isPointWithinRadius(this.state.currentPos, zone.center, zone.radius_meters);
                         let inflictingDamage = i === 0 && this.state.zones.length !== 1;
 
                         let color: string;
