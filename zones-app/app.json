@@ -27,7 +27,8 @@
       "supportsTablet": true
     },
     "extra": {
-      "serverUri": "ws://localhost:2567"
+      "serverUri": "ws://localhost:2567",
+      "awsRegion": "us-west-2",
     }
   }
 }

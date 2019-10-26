@@ -92,7 +92,7 @@ export class ZonesServer extends Room<State> {
   setupZone = (initialPosition: CoordsSerialized) => {
     this.generateZone(initialPosition);
 
-    setInterval(this.generateZone, 10 * 1000);
+    setInterval(this.generateZone, 15 * 1000);
     setInterval(this.checkDamage, 5 * 1000);
   }
 
