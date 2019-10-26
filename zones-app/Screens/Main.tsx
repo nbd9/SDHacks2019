@@ -2,14 +2,13 @@ import React, { Component } from 'react';
 import { StyleSheet, Dimensions, View } from 'react-native';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
-import MapView, { Circle, LatLng } from 'react-native-maps';
+import MapView, { Circle } from 'react-native-maps';
 import * as Colyseus from 'colyseus.js'
 import Constants from 'expo-constants';
-import sleep from '../Util/sleep';
 
 interface Coordinate {
-    lat: number;
-    long: number;
+    latitude: number;
+    longitude: number;
 }
 
 interface Player {
@@ -45,12 +44,6 @@ export default class MainScreen extends Component<{}, State> {
         password: 'password',
     });
 
-    this.room = await this.client.joinOrCreate('zones_room')
-    this.room.onStateChange(state => {
-        console.log(state)
-        this.setState(state)
-    })
-
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
     if (status !== 'granted') {
       this.setState({
@@ -61,16 +54,12 @@ export default class MainScreen extends Component<{}, State> {
     Location.watchPositionAsync({
         accuracy: Location.Accuracy.Balanced
     }, location => {
-        let coords = {
-            lat: location.coords.latitude,
-            long: location.coords.longitude,
-        };
         if (!this.room) {
-            this.setupRoom(coords)
+            this.setupRoom(location.coords)
         } else {
             this.room.send({
                 type: 'LOCATION_UPDATE',
-                coords,
+                coords: location.coords,
             });
         }
     })
@@ -78,10 +67,7 @@ export default class MainScreen extends Component<{}, State> {
 
   setupRoom = async (coords: Coordinate) => {
     this.mapView.current.animateCamera({
-        center: {
-            latitude: coords.lat,
-            longitude: coords.long,
-        },
+        center: coords,
         altitude: 5000,
     });
 
@@ -90,22 +76,14 @@ export default class MainScreen extends Component<{}, State> {
     });
 
     this.room.onStateChange(async state => {
-        if (this.state && state.zones.length !== this.state.zones.length) {
+        if ((state.zones.length == 1 && !this.state) || (this.state && state.zones.length !== this.state.zones.length)) {
             // TODO: Announce new location with Amazon Poly.
+            let currentView = await this.mapView.current.getCamera()
             let newZone = state.zones[state.zones.length - 1];
             this.mapView.current.animateCamera({
-                center: {
-                    latitude: newZone.center.lat,
-                    longitude: newZone.center.long,
-                },
+                center: newZone.center,
             });
-            await sleep(2000);
-            this.mapView.current.animateCamera({
-                center: {
-                    latitude: this.state.players[this.room.sessionId].location.lat,
-                    longitude: this.state.players[this.room.sessionId].location.long,
-                },
-            });
+            setTimeout(() => this.mapView.current.animateCamera(currentView), 3000);
         }
 
         this.setState(state);
@@ -126,11 +104,8 @@ export default class MainScreen extends Component<{}, State> {
             {
                 this.state && this.state.zones.length > 0 && (
                     <Circle 
-                        center={{
-                            latitude: this.state.zones[0].center.lat,
-                            longitude: this.state.zones[0].center.long,
-                        }}
-                        radius={this.state.zones[0].radius_meters}
+                        center={this.state.zones[this.state.zones.length - 1].center}
+                        radius={this.state.zones[this.state.zones.length - 1].radius_meters}
                     />
                 )
             }

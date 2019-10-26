@@ -6,16 +6,16 @@ import * as geolib from 'geolib';
 const MAX_FIRST_DISTANCE_METERS = 800;
 
 interface CoordsSerialized {
-  lat: number;
-  long: number;
+  latitude: number;
+  longitude: number;
 }
 
 export class Coordinate extends Schema {
   @type('number')
-  lat: number = 0;
+  latitude: number = 0;
 
   @type('number')
-  long: number = 0;
+  longitude: number = 0;
 }
 
 export class Player extends Schema {
@@ -42,24 +42,22 @@ export class State extends Schema {
   players = new MapSchema<Player>();
 
   @type([ Zone ])
-  zones = new ArraySchema();
+  zones = new ArraySchema<Zone>();
 
   createPlayer (id: string, location: CoordsSerialized) {
       this.players[id] = new Player();
-
-      let coords = new Coordinate();
-      coords.lat = location.lat;
-      coords.long = location.long;
-      this.players[id].location = coords;
+      this.movePlayer(id, location)
   }
 
   removePlayer (id: string) {
       delete this.players[id];
   }
 
-  movePlayer (id: string, coords: Coordinate) {
-    this.players[id].location.lat = coords.lat;
-    this.players[id].location.long = coords.long;
+  movePlayer (id: string, location: CoordsSerialized) {
+    let coords = new Coordinate();
+    coords.latitude = location.latitude;
+    coords.longitude = location.longitude;
+    this.players[id].location = coords;
   }
 }
 
@@ -91,25 +89,68 @@ export class ZonesServer extends Room<State> {
   onDispose() {
   }
 
-  setupZone(initialPosition: CoordsSerialized) {
-    let firstZone = new Zone();
+  setupZone = (initialPosition: CoordsSerialized) => {
+    this.generateZone(initialPosition);
 
+    setInterval(this.generateZone, 10 * 1000);
+    setInterval(this.checkDamage, 5 * 1000);
+  }
+
+  checkDamage = () => {
+    // No need to check if there's no current zone.
+    if (!this.state || this.state.zones.length < 2) return;
+
+    for (let playerId in this.state.players._indexes) {
+      let currentZone = this.state.zones[this.state.zones.length - 2]
+      let player: Player = this.state.players[playerId];
+      let isSafe = geolib.isPointWithinRadius(player.location, currentZone.center, currentZone.radius_meters)
+      if (!isSafe) {
+        // this.state.players[playerId].health -= 3;
+      }
+    }
+  }
+
+  generateZone = (centerPosition?: CoordsSerialized) => {
+    let lastZone: Zone | undefined;
+    console.log(this.state.zones)
+    if (this.state && this.state.zones.length > 0) {
+      lastZone = this.state.zones[this.state.zones.length - 1];
+    }
+
+    if (!lastZone && !centerPosition) {
+      console.error('Need last zone or center position!');
+      return;
+    }
+
+    let newZone = new Zone();
     let center = new Coordinate();
-    let newCenter = geolib.computeDestinationPoint(
-      {
-        latitude: initialPosition.lat,
-        longitude: initialPosition.long
-      },
-      Math.random() * MAX_FIRST_DISTANCE_METERS,
-      Math.random() * 360,
-    );
-    center.lat = newCenter.latitude;
-    center.long = newCenter.longitude;
-    firstZone.center = center;
-    firstZone.active_time = moment().add(2, 'minute').toISOString();
-    firstZone.radius_meters = 400;
+    let newCenter;
+    let newRadius;
 
-    this.state.zones.push(firstZone);
+    if (centerPosition) {
+      newCenter = geolib.computeDestinationPoint(
+        centerPosition,
+        Math.random() * MAX_FIRST_DISTANCE_METERS,
+        Math.random() * 360,
+      );
+      newRadius = 400;
+    } else {
+      newCenter = geolib.computeDestinationPoint(
+        lastZone!.center,
+        Math.random() * (lastZone!.radius_meters / 2),
+        Math.random() * 360,
+      );
+      newRadius = lastZone!.radius_meters / 2
+    }
+
+    center.latitude = newCenter.latitude;
+    center.longitude = newCenter.longitude;
+    newZone.center = center;
+    newZone.active_time = moment().add(2, 'minute').toISOString();
+    newZone.radius_meters = newRadius;
+
+    this.state.zones.push(newZone);
+    return newZone;
   }
 
 }
