@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { Schema, type, MapSchema } from "@colyseus/schema";
+import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 
 export class Coordinate extends Schema {
   @type('number')
@@ -30,7 +30,7 @@ export class State extends Schema {
   players = new MapSchema<Player>();
 
   @type([ Zone ])
-  zones = []
+  zones = new ArraySchema();
 
   createPlayer (id: string) {
       this.players[id] = new Player();
