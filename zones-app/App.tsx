@@ -1,19 +1,17 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { Component } from 'react';
+import MainScreen from './Screens/Main'
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-    </View>
-  );
+import { AsyncStorage } from 'react-native';
+import { Buffer } from "buffer";
+//@ts-ignore
+window.localStorage = AsyncStorage;
+//@ts-ignore
+global.Buffer = Buffer;
+
+export default class App extends Component {
+  render() {
+    return (
+      <MainScreen />
+    );
+  }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

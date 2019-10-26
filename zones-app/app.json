@@ -25,6 +25,9 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "extra": {
+      "serverUri": "ws://localhost:2567"
     }
   }
 }
