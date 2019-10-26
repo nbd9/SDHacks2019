@@ -1,12 +1,39 @@
 import React, { Component } from 'react';
 import { StyleSheet, Dimensions, View } from 'react-native';
+import * as Location from 'expo-location';
+import * as Permissions from 'expo-permissions';
 import MapView from 'react-native-maps';
 import * as Colyseus from 'colyseus.js'
 import Constants from 'expo-constants';
 
-export default class MainScreen extends Component {
+interface Coordinate {
+    lat: number;
+    long: number;
+}
+
+interface Player {
+    health: number;
+    location: Coordinate;
+}
+
+interface Zone {
+    center: Coordinate;
+    active_time: string;
+}
+interface GameState {
+    players: {
+        [id: string]: Player
+    },
+    zones: Zone[]
+}
+
+interface State extends GameState {
+    error: string
+}
+
+export default class MainScreen extends Component<{}, State> {
   client: Colyseus.Client;
-  room: Colyseus.Room;
+  room: Colyseus.Room<GameState>;
 
   async componentDidMount() {
     this.client = new Colyseus.Client(Constants.manifest.extra.serverUri)
@@ -15,20 +42,30 @@ export default class MainScreen extends Component {
         password: 'password',
     });
 
-    try {
-        this.room = await this.client.joinOrCreate('my_room', {})
-    } catch (e) {
-        console.error(e)
-        return
+    this.room = await this.client.joinOrCreate('zones_room')
+    this.room.onStateChange(state => {
+        console.log(state)
+        this.setState(state)
+    })
+
+    let { status } = await Permissions.askAsync(Permissions.LOCATION);
+    if (status !== 'granted') {
+      this.setState({
+        error: 'Permission to access location was denied',
+      });
     }
 
-    console.log(this.room.id)
-    this.room.onStateChange((state) => {
-        console.log(this.room.name, "has new state:", state);
-    });
-    this.room.onMessage((message) => {
-        console.log("received on", this.room.name, message);
-    });
+    Location.watchPositionAsync({
+        accuracy: Location.Accuracy.Balanced
+    }, location => {
+        this.room.send({
+            type: 'LOCATION_UPDATE',
+            coords: {
+                lat: location.coords.latitude,
+                long: location.coords.longitude,
+            }
+        })
+    })
   }
   
   render() {

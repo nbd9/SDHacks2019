@@ -3,10 +3,10 @@ import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 
 export class Coordinate extends Schema {
   @type('number')
-  x: number = 0;
+  lat: number = 0;
 
   @type('number')
-  y: number = 0;
+  long: number = 0;
 }
 
 export class Player extends Schema {
@@ -40,11 +40,9 @@ export class State extends Schema {
       delete this.players[id];
   }
 
-  movePlayer (id: string, x: number, y: number) {
-    if (x && y) {
-      this.players[id].x = x;
-      this.players[id].y = y;
-    }
+  movePlayer (id: string, coords: Coordinate) {
+    this.players[id].location.lat = coords.lat;
+    this.players[id].location.long = coords.long;
   }
 }
 
@@ -62,7 +60,8 @@ export class ZonesServer extends Room<State> {
 
   onMessage (client: Client, message: any) {
     if (message.type == 'LOCATION_UPDATE') {
-      this.state.movePlayer(client.sessionId, message.x, message.y);
+      this.state.movePlayer(client.sessionId, message.coords);
+      console.log(this.state.players)
     }
   }
 

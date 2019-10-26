@@ -20,7 +20,7 @@ const gameServer = new Server({
 });
 
 // register your room handlers
-gameServer.define('my_room', ZonesServer);
+gameServer.define('zones_room', ZonesServer);
 
 // register @colyseus/social routes
 app.use("/", socialRoutes);
