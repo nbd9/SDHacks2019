@@ -112,12 +112,13 @@ export default class MainScreen extends Component<{}, State> {
           ref={this.mapView}
         >
             {
-                this.state && this.state.zones && this.state.zones.length > 0 && (
+                this.state && this.state.zones && this.state.zones.map(zone => (
                     <Circle 
-                        center={this.state.zones[this.state.zones.length - 1].center}
-                        radius={this.state.zones[this.state.zones.length - 1].radius_meters}
+                        center={zone.center}
+                        radius={zone.radius_meters}
+                        key={zone.active_time}
                     />
-                )
+                ))
             }
         </MapView>
       </View>
