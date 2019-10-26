@@ -36,6 +36,7 @@ export default class MainScreen extends Component<{}, State> {
   client: Colyseus.Client;
   room: Colyseus.Room<GameState>;
   mapView = React.createRef<MapView>();
+  passedFirstUpdate = false;
 
   async componentDidMount() {
     this.client = new Colyseus.Client(Constants.manifest.extra.serverUri);
@@ -59,7 +60,10 @@ export default class MainScreen extends Component<{}, State> {
         } else {
             this.room.send({
                 type: 'LOCATION_UPDATE',
-                coords: location.coords,
+                coords: {
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                },
             });
         }
     })
@@ -76,6 +80,12 @@ export default class MainScreen extends Component<{}, State> {
     });
 
     this.room.onStateChange(async state => {
+        // For some reason, the first update is bugged. This fixes a crash that used to happen on boot. Don't ask me why.
+        if (!this.passedFirstUpdate) {
+            this.passedFirstUpdate = true;
+            return;
+        }
+
         if ((state.zones.length == 1 && !this.state) || (this.state && state.zones.length !== this.state.zones.length)) {
             // TODO: Announce new location with Amazon Poly.
             let currentView = await this.mapView.current.getCamera()
@@ -102,7 +112,7 @@ export default class MainScreen extends Component<{}, State> {
           ref={this.mapView}
         >
             {
-                this.state && this.state.zones.length > 0 && (
+                this.state && this.state.zones && this.state.zones.length > 0 && (
                     <Circle 
                         center={this.state.zones[this.state.zones.length - 1].center}
                         radius={this.state.zones[this.state.zones.length - 1].radius_meters}

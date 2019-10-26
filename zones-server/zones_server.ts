@@ -100,19 +100,19 @@ export class ZonesServer extends Room<State> {
     // No need to check if there's no current zone.
     if (!this.state || this.state.zones.length < 2) return;
 
-    for (let playerId in this.state.players._indexes) {
+    for (let playerId in this.state.players) {
       let currentZone = this.state.zones[this.state.zones.length - 2]
       let player: Player = this.state.players[playerId];
       let isSafe = geolib.isPointWithinRadius(player.location, currentZone.center, currentZone.radius_meters)
       if (!isSafe) {
-        // this.state.players[playerId].health -= 3;
+        this.state.players[playerId].health -= 3;
+        console.log(`OUCH OUCH. Player ${playerId} new health ${this.state.players[playerId].health}`)
       }
     }
   }
 
   generateZone = (centerPosition?: CoordsSerialized) => {
     let lastZone: Zone | undefined;
-    console.log(this.state.zones)
     if (this.state && this.state.zones.length > 0) {
       lastZone = this.state.zones[this.state.zones.length - 1];
     }
