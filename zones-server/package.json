@@ -1,18 +1,12 @@
 {
-  "name": "my-app",
+  "name": "zones-server",
   "version": "1.0.0",
-  "description": "npm init template for bootstraping an empty Colyseus project",
-  "main": "lib/index.js",
+  "main": "lib/index.ts",
   "scripts": {
     "start": "ts-node -r dotenv/config index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "UNLICENSED",
-  "bugs": {
-    "url": "https://github.com/colyseus/create-colyseus/issues"
-  },
-  "homepage": "https://github.com/colyseus/create-colyseus#readme",
+  "author": "nbd9",
   "devDependencies": {
     "@colyseus/loadtest": "^0.11.0",
     "@types/cors": "^2.8.6",
