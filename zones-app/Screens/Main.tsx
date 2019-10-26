@@ -152,13 +152,25 @@ export default class MainScreen extends Component<{}, State> {
             ref={this.mapView}
             >
                 {
-                    this.state && this.state.zones && this.state.zones.map(zone => (
-                        <Circle 
-                            center={zone.center}
-                            radius={zone.radius_meters}
-                            key={zone.active_time}
-                        />
-                    ))
+                    this.state && this.state.zones && this.state.zones.slice(this.state.zones.length - 2).map((zone, i) => {
+                        let safe = geolib.isPointWithinRadius(this.currentPos, zone.center, zone.radius_meters);
+                        let inflictingDamage = i < (this.state.zones.length - 1)
+
+                        let color: string;
+                        if (safe) color = '99, 176, 205'
+                        else if (inflictingDamage) color = '255, 0, 0'
+                        else color = '255, 255, 0'
+
+                        return (
+                            <Circle
+                                center={zone.center}
+                                radius={zone.radius_meters}
+                                fillColor={`rgba(${color}, 0.4)`}
+                                strokeColor={`rgba(${color}, 1)`}
+                                key={zone.active_time}
+                            />
+                        )
+                    })
                 }
             </MapView>
         </View>
