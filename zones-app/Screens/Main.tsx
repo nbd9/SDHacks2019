@@ -31,17 +31,13 @@ interface GameState {
     zones: Zone[];
 }
 
-interface State extends GameState {
-    error: string;
-}
-
-export default class MainScreen extends Component<{}, State> {
+export default class MainScreen extends Component<{}, GameState> {
     colyseusClient: Colyseus.Client;
     pollyClient = new AWS.Polly.Presigner();
     room: Colyseus.Room<GameState>;
     mapView = React.createRef<MapView>();
     passedFirstUpdate = false;
-    currentPos: Coordinate
+    currentPos: Coordinate;
     
     async componentDidMount() {
         this.colyseusClient = new Colyseus.Client(Constants.manifest.extra.serverUri);
@@ -50,12 +46,8 @@ export default class MainScreen extends Component<{}, State> {
             password: 'password',
         });
 
-        let { status } = await Permissions.askAsync(Permissions.LOCATION);
-        if (status !== 'granted') {
-        this.setState({
-            error: 'Permission to access location was denied',
-        });
-        }
+        // TODO: handle permissions denied
+        await Permissions.askAsync(Permissions.LOCATION);
 
         Location.watchPositionAsync({
             accuracy: Location.Accuracy.Balanced
@@ -144,22 +136,22 @@ export default class MainScreen extends Component<{}, State> {
         return (
         <View style={styles.container}>
             <MapView 
-            style={{
-                width: Dimensions.get('window').width,
-                height: Dimensions.get('window').height,
-            }}
-            showsUserLocation
-            ref={this.mapView}
+                style={{
+                    width: Dimensions.get('window').width,
+                    height: Dimensions.get('window').height,
+                }}
+                showsUserLocation
+                ref={this.mapView}
             >
                 {
                     this.state && this.state.zones && this.state.zones.slice(this.state.zones.length - 2).map((zone, i) => {
                         let safe = geolib.isPointWithinRadius(this.currentPos, zone.center, zone.radius_meters);
-                        let inflictingDamage = i < (this.state.zones.length - 1)
+                        let inflictingDamage = i === 0 && this.state.zones.length !== 1;
 
                         let color: string;
-                        if (safe) color = '99, 176, 205'
-                        else if (inflictingDamage) color = '255, 0, 0'
-                        else color = '255, 255, 0'
+                        if (safe)                   color = '99, 176, 205'
+                        else if (inflictingDamage)  color = '255, 0, 0'
+                        else                        color = '255, 255, 0'
 
                         return (
                             <Circle
