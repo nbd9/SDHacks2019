@@ -1,0 +1,5 @@
+{
+    "private": true,
+    "main": "./zones-server/index.ts",
+    "workspaces": ["zones-app", "zones-server"]
+  }
