@@ -1,13 +1,11 @@
 {
+  "name": "zones-app",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "eject": "expo eject",
-    "lint": "eslint App.tsx components/*",
-    "tsc": "tsc"
+    "lint": "eslint . --fix --ext .ts,.tsx"
   },
   "dependencies": {
     "aws-sdk": "^2.556.0",
@@ -20,22 +18,54 @@
     "react": "16.8.3",
     "react-dom": "16.8.3",
     "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
-    "react-native-countdown-component": "^2.6.0",
     "react-native-gesture-handler": "~1.2.1",
     "react-native-maps": "~0.25.0",
     "react-native-reanimated": "~1.2.0",
-    "react-native-redash": "^7.5.0",
-    "react-native-svg": "~9.9.2",
-    "react-native-web": "^0.11.7",
-    "use-memo-one": "^1.1.1"
+    "react-native-svg": "~9.9.2"
   },
   "devDependencies": {
+    "@types/node": "^12.11.7",
     "@types/react": "^16.8.23",
     "@types/react-native": "^0.57.65",
+    "@typescript-eslint/eslint-plugin": "^2.5.0",
+    "@typescript-eslint/parser": "^2.5.0",
     "babel-preset-expo": "^7.1.0",
-    "eslint": "^6.0.1",
-    "eslint-config-react-native-wcandillon": "^2.0.2",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-config-prettier-standard": "^3.0.1",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.16.0",
+    "eslint-plugin-react-native": "^3.8.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "prettier": "^1.18.2",
+    "prettier-config-standard": "^1.0.1",
     "typescript": "^3.6.3"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier/@typescript-eslint",
+      "prettier-standard",
+      "plugin:react-native/all"
+    ],
+    "plugins": [
+      "react",
+      "react-native",
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "@typescript-eslint/ban-ts-ignore": 0,
+      "react/prop-types": 0,
+      "react-native/no-inline-styles": 0,
+      "react-native/no-color-literals": 0 
+    }
   },
   "private": true
 }
