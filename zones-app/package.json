@@ -5,7 +5,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "eject": "expo eject"
+    "eject": "expo eject",
+    "lint": "eslint App.tsx components/*",
+    "tsc": "tsc"
   },
   "dependencies": {
     "aws-sdk": "^2.556.0",
@@ -13,18 +15,26 @@
     "colyseus.js": "^0.11.4",
     "expo": "^35.0.0",
     "expo-av": "~7.0.0",
-    "expo-location": "~7.0.0",
+    "expo-location": "^7.0.0",
     "geolib": "^3.0.4",
     "react": "16.8.3",
     "react-dom": "16.8.3",
     "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
+    "react-native-countdown-component": "^2.6.0",
+    "react-native-gesture-handler": "~1.2.1",
     "react-native-maps": "~0.25.0",
-    "react-native-web": "^0.11.7"
+    "react-native-reanimated": "~1.2.0",
+    "react-native-redash": "^7.5.0",
+    "react-native-svg": "~9.9.2",
+    "react-native-web": "^0.11.7",
+    "use-memo-one": "^1.1.1"
   },
   "devDependencies": {
     "@types/react": "^16.8.23",
     "@types/react-native": "^0.57.65",
     "babel-preset-expo": "^7.1.0",
+    "eslint": "^6.0.1",
+    "eslint-config-react-native-wcandillon": "^2.0.2",
     "typescript": "^3.6.3"
   },
   "private": true
