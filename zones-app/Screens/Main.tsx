@@ -10,32 +10,34 @@ import * as Permissions from 'expo-permissions';
 import * as Colyseus from 'colyseus.js'
 import Hurting from '../Components/hurting';
 
-const available_width = 200;
+const available_width = 200; // Constant for width of the health bar
 
-interface Coordinate {
+interface Coordinate { // Each coordinate has an 'x' and 'y'
     latitude: number;
     longitude: number;
 }
 
-interface Player {
+interface Player { // Each player has HP and a coordinate
     health: number;
     location: Coordinate;
 }
 
-interface Zone {
-    center: Coordinate;
-    active_time: string;
-    radius_meters: number;
+interface Zone { 
+    center: Coordinate; // Coordinate for center of zone
+    active_time: string; // How long the zone will be active before disappearing
+    radius_meters: number; // Radius of the circular zone
 }
-interface GameState {
-    players: {
+interface GameState { // Multiplayer game state
+    players: { // List of players categorized by their id
         [id: string]: Player
     };
-    zones: Zone[];
+    zones: Zone[]; // List of zones
 }
+
 interface State extends GameState {
     currentPos: Coordinate;
 }
+
 
 export default class MainScreen extends Component<{}, State> {
     colyseusClient: Colyseus.Client;
@@ -140,7 +142,7 @@ export default class MainScreen extends Component<{}, State> {
         });
     }
     
-    render() {
+    render() { // Renders what we see on screen
         let currentActiveZone = 
             this.state 
             && this.state.zones
@@ -150,13 +152,13 @@ export default class MainScreen extends Component<{}, State> {
             currentActiveZone
             && !geolib.isPointWithinRadius(this.state.currentPos, currentActiveZone.center, currentActiveZone.radius_meters)
 
-        // HEALTH CALCULATIONS
+        // HEALTH CALCULATIONS - gets health of current player
         let health = (this.state && this.state.players[this.room.sessionId].health) || 100
-        //let health = 50; //this.state.players[this.room.sessionId].health // Health of current player
+        //let health = 50; //this.state.players[this.room.sessionId].health // static health value for testing
         let currentHealth = new Animated.Value(health); // Converts health to an animated value
         var animated_width = currentHealth.interpolate({ // Interpolates health value so it can be animated
             inputRange: [0, 50, 100],
-            outputRange: [0, available_width / 2, available_width-3.5]
+            outputRange: [0, available_width / 2, available_width-3.5] // Affects width of displayed value
         })
 
         const color_animation = currentHealth.interpolate({ // Color of animation based on health: goes from green-orange-red
@@ -169,11 +171,11 @@ export default class MainScreen extends Component<{}, State> {
           });
 
         const h = 21.5; // this is the height of the color inside the healthbar
-        // the actual dimensions of the healthbar are in the style for container (or rail i forget)
-        
-        return (
+        // the actual dimensions of the healthbar are in the style for rail
+
+        return ( // This is where we display our modules
         <View style={styles.container}>
-            {/* <Hurting takingDamage={takingDamage} /> */}
+            <Hurting takingDamage={takingDamage} />
 
             <MapView 
                 style={{
@@ -181,13 +183,14 @@ export default class MainScreen extends Component<{}, State> {
                     height: Dimensions.get('window').height,
                 }}
                 showsUserLocation = {true}
-                showsMyLocationButton = {true}
+                //showsMyLocationButton = {true}
                 followsUserLocation = {true}
-                //region = {this.state.players[this.room.sessionId].location}
+                //region = {this.state.players[this.room.sessionId].location} // test for getting current 
                 ref={this.mapView}
             >
-                {
+                { // draws the zones
                     this.state && this.state.zones && this.state.zones.slice(this.state.zones.length - 2).map((zone, i) => {
+                        // true if player is inside the safe zone
                         let safe = geolib.isPointWithinRadius(this.state.currentPos, zone.center, zone.radius_meters);
                         let inflictingDamage = i === 0 && this.state.zones.length !== 1;
 
@@ -208,30 +211,34 @@ export default class MainScreen extends Component<{}, State> {
                     })
                 }
             </MapView>
-            <Hurting takingDamage={takingDamage} />
 
-            <View style={styles.rail}>
-                <Animated.View style={{
+            {/* HEALTH BAR DISPLAY */}
+            <View style={styles.rail}> 
+                <Animated.View style={{ // Draws the inside of the health bar - rail draws the outline
                     width: animated_width,
                     height:h,
                     backgroundColor: color_animation
                 }} />
                 <Text style={{ textAlign: 'center' }}>Player Name - {health}%</Text>
+                {/* The code above writes the text under the health bar */}
             </View>
-                
+
+            {/* ADD MORE MODULES HERE */}
+
         </View>
         );
     }
 }
 
+// Collection of styles so we can customize where things appear on the screen
 const styles = StyleSheet.create({
-  container: {
+  container: { // The main container for the entire screen
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rail: {
+  rail: { // Used for the health bar display
     height: 25,
     width: 200,
     maxHeight: 100,
