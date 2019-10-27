@@ -15,7 +15,6 @@
     "typescript": "^3.4.5"
   },
   "dependencies": {
-    "@colyseus/monitor": "^0.11.0",
     "@colyseus/social": "^0.11.6",
     "colyseus": "^0.11.0",
     "cors": "^2.8.5",

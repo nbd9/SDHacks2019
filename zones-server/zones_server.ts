@@ -3,7 +3,7 @@ import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 import moment from 'moment'
 import * as geolib from 'geolib';
 
-const MAX_FIRST_DISTANCE_METERS = 800;
+const MAX_FIRST_DISTANCE_METERS = 400;
 
 interface CoordsSerialized {
   latitude: number;
@@ -62,17 +62,28 @@ export class State extends Schema {
 }
 
 export class ZonesServer extends Room<State> {
-  maxClients = 2;
-
   onCreate () {
     console.log('Zones Server Created.')
     this.setState(new State());
   }
 
-  onJoin (client: Client, options: { coords: CoordsSerialized }) {
+  onJoin (client: Client, options: { coords: CoordsSerialized, singlePlayer: boolean }) {
     this.state.createPlayer(client.sessionId, options.coords);
-    if (this.clients.length == 0) {
+    if (this.clients.length == 0 && options.singlePlayer) {
       this.setupZone(options.coords);
+    } else if (!options.singlePlayer && this.state.zones.length === 0) {
+      let locations = [options.coords];
+      for (const player in this.state.players) {
+        let coords = this.state.players[player].location
+        locations.push(coords);
+      }
+
+      let center = geolib.getCenter(locations)
+      if (!center) {
+        console.error('Cannot compute center!')
+        return;
+      };
+      this.setupZone(center);
     }
   }
 
@@ -86,14 +97,10 @@ export class ZonesServer extends Room<State> {
     this.state.removePlayer(client.sessionId);
   }
 
-  onDispose() {
-  }
-
   setupZone = (initialPosition: CoordsSerialized) => {
     this.generateZone(initialPosition);
-
-    setInterval(this.generateZone, 15 * 1000);
-    setInterval(this.checkDamage, 5 * 1000);
+    this.clock.setInterval(this.generateZone, 2 * 60 * 1000);
+    this.clock.setInterval(this.checkDamage, 5 * 1000);
   }
 
   checkDamage = () => {
@@ -105,8 +112,12 @@ export class ZonesServer extends Room<State> {
       let player: Player = this.state.players[playerId];
       let isSafe = geolib.isPointWithinRadius(player.location, currentZone.center, currentZone.radius_meters)
       if (!isSafe) {
-        this.state.players[playerId].health -= 3;
-        console.log(`OUCH OUCH. Player ${playerId} new health ${this.state.players[playerId].health}`)
+        if (this.state.players[playerId].health <= 3) {
+          this.state.players[playerId] = 0;
+        } else {
+          this.state.players[playerId].health -= 3;
+        }
+        console.log(`Player ${playerId} damanged. New health ${this.state.players[playerId].health}.`)
       }
     }
   }

@@ -7,6 +7,7 @@ import Constants from 'expo-constants'
 import Reanimated from 'react-native-reanimated'
 
 import * as geolib from 'geolib'
+import * as Facebook from 'expo-facebook';
 import * as Location from 'expo-location'
 import * as Permissions from 'expo-permissions'
 import * as Colyseus from 'colyseus.js'
@@ -39,13 +40,13 @@ export default class MainScreen extends Component<{}, State> {
   countdownPolling: NodeJS.Timeout
 
   async componentDidMount() {
+    // TODO: handle login denied
+    const fbLogin = await Facebook.logInWithReadPermissionsAsync(Constants.manifest.extra.facebookAppId)
+    console.log(fbLogin)
     this.colyseusClient = new Colyseus.Client(
       Constants.manifest.extra.serverUri
     )
-    this.colyseusClient.auth.login({
-      email: 'testing@gmail.com',
-      password: 'password'
-    })
+    this.colyseusClient.auth.login({ accessToken: fbLogin.token });
 
     this.countdownPolling = setInterval(() => {
       if (!this.state || !this.state.zones) return
@@ -129,24 +130,24 @@ export default class MainScreen extends Component<{}, State> {
         const announcement = safe
           ? "New zone is active, and you're already in the next zone. Stay safe!"
           : `New zone is active! Next zone is ${distance} meters away towards the ${direction}. Get to safety!`
-        const pollyParams: AWS.Polly.SynthesizeSpeechInput = {
-          OutputFormat: 'mp3',
-          Text: announcement,
-          TextType: 'text',
-          VoiceId: 'Joanna'
-        }
+        // const pollyParams: AWS.Polly.SynthesizeSpeechInput = {
+        //   OutputFormat: 'mp3',
+        //   Text: announcement,
+        //   TextType: 'text',
+        //   VoiceId: 'Joanna'
+        // }
 
-        this.pollyClient.getSynthesizeSpeechUrl(
-          pollyParams,
-          async (err, url) => {
-            if (err) {
-              console.error(err)
-            } else {
-              const soundObject = new Audio.Sound()
-              await soundObject.loadAsync({ uri: url }, { shouldPlay: true })
-            }
-          }
-        )
+        // this.pollyClient.getSynthesizeSpeechUrl(
+        //   pollyParams,
+        //   async (err, url) => {
+        //     if (err) {
+        //       console.error(err)
+        //     } else {
+        //       const soundObject = new Audio.Sound()
+        //       await soundObject.loadAsync({ uri: url }, { shouldPlay: true })
+        //     }
+        //   }
+        // )
 
         this.mapView.current.animateCamera({
           center: newZone.center
@@ -181,6 +182,7 @@ export default class MainScreen extends Component<{}, State> {
     const msRemaining = (this.state && this.state.timeLeft) || 0
     const secRemaining = Math.floor((msRemaining / 1000) % 60)
     const minRemaining = Math.floor(msRemaining / 1000 / 60)
+    const percentRemaining = msRemaining / (2 * 60 * 1000)
 
     return (
       <View style={styles.container}>
@@ -196,10 +198,9 @@ export default class MainScreen extends Component<{}, State> {
             justifyContent: 'center',
             alignItems: 'center'
           }}>
-          <CircularProgress progress={new Reanimated.Value(40)} />
+          <CircularProgress progress={new Reanimated.Value(100 - percentRemaining)} />
           <Text>
-            {' '}
-            {minRemaining}:{secRemaining} Till New Zone
+            {minRemaining}:{secRemaining > 10 ? secRemaining : `0${secRemaining}`} Till New Zone
           </Text>
         </View>
         <MapView

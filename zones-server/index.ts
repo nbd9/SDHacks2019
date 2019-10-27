@@ -2,7 +2,6 @@ import http from "http";
 import express from "express";
 import cors from "cors";
 import { Server } from "colyseus";
-import { monitor } from "@colyseus/monitor";
 import socialRoutes from "@colyseus/social/express"
 
 import { ZonesServer } from "./zones_server";
@@ -24,9 +23,6 @@ gameServer.define('zones_room', ZonesServer);
 
 // register @colyseus/social routes
 app.use("/", socialRoutes);
-
-// register colyseus monitor AFTER registering your room handlers
-app.use("/colyseus", monitor(gameServer));
 
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${ port }`)
