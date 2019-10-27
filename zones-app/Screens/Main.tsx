@@ -8,7 +8,10 @@ import * as geolib from 'geolib';
 import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import * as Colyseus from 'colyseus.js'
+import Reanimated from "react-native-reanimated";
 import Hurting from '../Components/hurting';
+import CircularProgress from '../Components/circular_progress';
+import CountDown from 'react-native-countdown-component';
 
 const available_width = 200; // Constant for width of the health bar
 
@@ -36,6 +39,7 @@ interface GameState { // Multiplayer game state
 
 interface State extends GameState {
     currentPos: Coordinate;
+    timeLeft: number;
 }
 
 
@@ -45,6 +49,7 @@ export default class MainScreen extends Component<{}, State> {
     room: Colyseus.Room<GameState>;
     mapView = React.createRef<MapView>();
     passedFirstUpdate = false;
+    countdownPolling: NodeJS.Timeout;
     
     async componentDidMount() {
         this.colyseusClient = new Colyseus.Client(Constants.manifest.extra.serverUri);
@@ -52,6 +57,15 @@ export default class MainScreen extends Component<{}, State> {
             email: 'testing@gmail.com',
             password: 'password',
         });
+
+        this.countdownPolling = setInterval(() => {
+            if (!this.state || !this.state.zones) return;
+            let zoneSwitch = new Date(this.state.zones[this.state.zones.length - 1].active_time)
+            let currentTime = new Date()
+            this.setState({
+                timeLeft: zoneSwitch.getTime() - currentTime.getTime(),
+            });
+        }, 1000)
 
         // TODO: handle permissions denied
         await Permissions.askAsync(Permissions.LOCATION);
@@ -152,9 +166,8 @@ export default class MainScreen extends Component<{}, State> {
             currentActiveZone
             && !geolib.isPointWithinRadius(this.state.currentPos, currentActiveZone.center, currentActiveZone.radius_meters)
 
-        // HEALTH CALCULATIONS - gets health of current player
-        let health = (this.state && this.state.players[this.room.sessionId].health) || 100
-        //let health = 50; //this.state.players[this.room.sessionId].health // static health value for testing
+        // HEALTH CALCULATIONS
+        let health = (this.state && this.room && this.state.players[this.room.sessionId].health) || 100
         let currentHealth = new Animated.Value(health); // Converts health to an animated value
         var animated_width = currentHealth.interpolate({ // Interpolates health value so it can be animated
             inputRange: [0, 50, 100],
@@ -171,12 +184,28 @@ export default class MainScreen extends Component<{}, State> {
           });
 
         const h = 21.5; // this is the height of the color inside the healthbar
-        // the actual dimensions of the healthbar are in the style for rail
+        // the actual dimensions of the healthbar are in the style for container (or rail i forget)
+        
+        let msRemaining = (this.state && this.state.timeLeft) || 0;
+        let secRemaining = Math.floor((msRemaining / 1000) % 60);
+        let minRemaining = Math.floor(msRemaining / 1000 / 60);
 
-        return ( // This is where we display our modules
+        return (
         <View style={styles.container}>
             <Hurting takingDamage={takingDamage} />
-
+            <View style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 100,
+                paddingTop: 50,
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <CircularProgress progress={new Reanimated.Value(40)} />
+                <Text> {minRemaining}:{secRemaining} Till New Zone</Text>
+            </View>
             <MapView 
                 style={{
                     width: Dimensions.get('window').width,
@@ -249,3 +278,4 @@ const styles = StyleSheet.create({
     bottom: 40,
   },
 });
+
