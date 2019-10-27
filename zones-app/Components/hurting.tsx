@@ -36,6 +36,7 @@ const Hurting: FC<Props> = ({ takingDamage }) => {
                 top: 0,
                 left: 0,
             }}
+            pointerEvents="none"
         />    
     )
 }

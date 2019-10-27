@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Dimensions, View, Animated } from 'react-native';
+import { StyleSheet, Dimensions, View, Animated, Text } from 'react-native';
 import MapView, { Circle } from 'react-native-maps';
 import { Audio } from 'expo-av';
 import AWS from 'aws-sdk'
@@ -9,6 +9,8 @@ import * as Location from 'expo-location';
 import * as Permissions from 'expo-permissions';
 import * as Colyseus from 'colyseus.js'
 import Hurting from '../Components/hurting';
+
+const available_width = 200;
 
 interface Coordinate {
     latitude: number;
@@ -32,7 +34,6 @@ interface GameState {
     zones: Zone[];
 }
 interface State extends GameState {
-    hurtOpacity: Animated.AnimatedValue;
     currentPos: Coordinate;
 }
 
@@ -61,7 +62,7 @@ export default class MainScreen extends Component<{}, State> {
             });
 
             if (!this.room) {
-                this.setupRoom(location.coords)
+               this.setupRoom(location.coords)
             } else {
                 this.room.send({
                     type: 'LOCATION_UPDATE',
@@ -92,7 +93,6 @@ export default class MainScreen extends Component<{}, State> {
                 return;
             }
 
-            console.log(this.state)
             if ((state.zones.length == 1 && (!this.state || !this.state.zones)) || (this.state && (state.zones.length !== this.state.zones.length))) {
                 let currentView = await this.mapView.current.getCamera()
                 let newZone = state.zones[state.zones.length - 1];
@@ -149,17 +149,41 @@ export default class MainScreen extends Component<{}, State> {
         let takingDamage = 
             currentActiveZone
             && !geolib.isPointWithinRadius(this.state.currentPos, currentActiveZone.center, currentActiveZone.radius_meters)
+
+        // HEALTH CALCULATIONS
+        let health = (this.state && this.state.players[this.room.sessionId].health) || 100
+        //let health = 50; //this.state.players[this.room.sessionId].health // Health of current player
+        let currentHealth = new Animated.Value(health); // Converts health to an animated value
+        var animated_width = currentHealth.interpolate({ // Interpolates health value so it can be animated
+            inputRange: [0, 50, 100],
+            outputRange: [0, available_width / 2, available_width-3.5]
+        })
+
+        const color_animation = currentHealth.interpolate({ // Color of animation based on health: goes from green-orange-red
+            inputRange: [0, 30, 100],
+            outputRange: [
+              "rgb(199, 45, 50)",
+              "rgb(224, 150, 39)",
+              "rgb(101, 203, 25)"
+            ]
+          });
+
+        const h = 21.5; // this is the height of the color inside the healthbar
+        // the actual dimensions of the healthbar are in the style for container (or rail i forget)
         
         return (
         <View style={styles.container}>
-            <Hurting takingDamage={takingDamage} />
+            {/* <Hurting takingDamage={takingDamage} /> */}
 
             <MapView 
                 style={{
                     width: Dimensions.get('window').width,
                     height: Dimensions.get('window').height,
                 }}
-                showsUserLocation
+                showsUserLocation = {true}
+                showsMyLocationButton = {true}
+                followsUserLocation = {true}
+                //region = {this.state.players[this.room.sessionId].location}
                 ref={this.mapView}
             >
                 {
@@ -184,6 +208,17 @@ export default class MainScreen extends Component<{}, State> {
                     })
                 }
             </MapView>
+            <Hurting takingDamage={takingDamage} />
+
+            <View style={styles.rail}>
+                <Animated.View style={{
+                    width: animated_width,
+                    height:h,
+                    backgroundColor: color_animation
+                }} />
+                <Text style={{ textAlign: 'center' }}>Player Name - {health}%</Text>
+            </View>
+                
         </View>
         );
     }
@@ -195,5 +230,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rail: {
+    height: 25,
+    width: 200,
+    maxHeight: 100,
+    borderWidth: 2,
+    borderRadius: 2,
+    position: 'absolute',
+    borderColor: "#616161", // this is the color of the box outline
+    bottom: 40,
   },
 });

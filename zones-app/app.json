@@ -27,7 +27,7 @@
       "supportsTablet": true
     },
     "extra": {
-      "serverUri": "ws://localhost:2567",
+      "serverUri": "https://sdhacks-2019-zones.herokuapp.com",
       "awsRegion": "us-west-2"
     }
   }
