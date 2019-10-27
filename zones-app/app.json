@@ -6,8 +6,7 @@
     "sdkVersion": "35.0.0",
     "platforms": [
       "ios",
-      "android",
-      "web"
+      "android"
     ],
     "version": "1.0.0",
     "orientation": "portrait",
@@ -27,8 +26,9 @@
       "supportsTablet": true
     },
     "extra": {
-      "serverUri": "https://sdhacks-2019-zones.herokuapp.com",
-      "awsRegion": "us-west-2"
+      "serverUri": "ws://localhost:2567",
+      "awsRegion": "us-west-2",
+      "facebookAppId": "483962069139374"
     }
   }
 }

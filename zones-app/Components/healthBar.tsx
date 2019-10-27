@@ -13,7 +13,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     height: 25,
     maxHeight: 100,
-    width: 200
+    width: 200,
+    bottom: 50,
   }
 })
 
