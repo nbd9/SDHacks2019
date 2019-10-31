@@ -39,7 +39,7 @@ const HealthBar: FC<Props> = ({ health, height = 21.5 }) => {
           backgroundColor: colorAnimation
         }}
       />
-      <Text style={{ textAlign: 'center' }}>Player Name - {health}%</Text>
+      <Text style={{ textAlign: 'center' }}>Nick DeGroot - {health}%</Text>
     </View>
   )
 }

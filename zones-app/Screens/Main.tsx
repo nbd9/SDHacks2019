@@ -12,9 +12,9 @@ import * as Location from 'expo-location'
 import * as Permissions from 'expo-permissions'
 import * as Colyseus from 'colyseus.js'
 
-import Hurting from '../components/hurting'
-import CircularProgress from '../components/circularProgress'
-import HealthBar from '../components/healthBar'
+import Hurting from '../Components/hurting'
+import CircularProgress from '../Components/circularProgress'
+import HealthBar from '../Components/healthBar'
 import { GameState, Coordinate } from '../types'
 
 interface State extends GameState {
@@ -130,24 +130,24 @@ export default class MainScreen extends Component<{}, State> {
         const announcement = safe
           ? "New zone is active, and you're already in the next zone. Stay safe!"
           : `New zone is active! Next zone is ${distance} meters away towards the ${direction}. Get to safety!`
-        // const pollyParams: AWS.Polly.SynthesizeSpeechInput = {
-        //   OutputFormat: 'mp3',
-        //   Text: announcement,
-        //   TextType: 'text',
-        //   VoiceId: 'Joanna'
-        // }
+        const pollyParams: AWS.Polly.SynthesizeSpeechInput = {
+          OutputFormat: 'mp3',
+          Text: announcement,
+          TextType: 'text',
+          VoiceId: 'Joanna'
+        }
 
-        // this.pollyClient.getSynthesizeSpeechUrl(
-        //   pollyParams,
-        //   async (err, url) => {
-        //     if (err) {
-        //       console.error(err)
-        //     } else {
-        //       const soundObject = new Audio.Sound()
-        //       await soundObject.loadAsync({ uri: url }, { shouldPlay: true })
-        //     }
-        //   }
-        // )
+        this.pollyClient.getSynthesizeSpeechUrl(
+          pollyParams,
+          async (err, url) => {
+            if (err) {
+              console.error(err)
+            } else {
+              const soundObject = new Audio.Sound()
+              await soundObject.loadAsync({ uri: url }, { shouldPlay: true })
+            }
+          }
+        )
 
         this.mapView.current.animateCamera({
           center: newZone.center
