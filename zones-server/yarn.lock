@@ -15,13 +15,6 @@
     typescript "^3.2.4"
     ws "^6.1.4"
 
-"@colyseus/monitor@^0.11.0":
-  version "0.11.5"
-  resolved "https://registry.yarnpkg.com/@colyseus/monitor/-/monitor-0.11.5.tgz#5b2c00e4b372f71de626d6c15c4a833fc0e6c030"
-  integrity sha512-b9H+Rqxp2YqogPoXC9xYKYeCqqRHX5QNs+BTaYVZqlqqycTJGeNZgy98NaksNWnK3ceAJBci8Vi3PpcvCPYdNw==
-  dependencies:
-    express "^4.16.3"
-
 "@colyseus/schema@^0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@colyseus/schema/-/schema-0.5.0.tgz#01bb9f8e1c261989b5f689f984fd977973d1e93e"
@@ -571,10 +564,10 @@ execa@^1.0.0:
     signal-exit "^3.0.0"
     strip-eof "^1.0.0"
 
-express-jwt@^5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/express-jwt/-/express-jwt-5.3.1.tgz#66f05c7dddb5409c037346a98b88965bb10ea4ae"
-  integrity sha512-1C9RNq0wMp/JvsH/qZMlg3SIPvKu14YkZ4YYv7gJQ1Vq+Dv8LH9tLKenS5vMNth45gTlEUGx+ycp9IHIlaHP/g==
+express-jwt@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/express-jwt/-/express-jwt-6.0.0.tgz#20886c730983ffb1c706a4383235df86eff349b8"
+  integrity sha512-C26y9myRjx7CyhZ+BAT3p+gQyRCoDZ7qo8plCvLDaRT6je6ALIAQknT6XLVQGFKwIy/Ux7lvM2MNap5dt0T7gA==
   dependencies:
     async "^1.5.0"
     express-unless "^0.3.0"
@@ -586,7 +579,7 @@ express-unless@^0.3.0:
   resolved "https://registry.yarnpkg.com/express-unless/-/express-unless-0.3.1.tgz#2557c146e75beb903e2d247f9b5ba01452696e20"
   integrity sha1-JVfBRudb65A+LSR/m1ugFFJpbiA=
 
-express@^4.16.3, express@^4.16.4:
+express@^4.16.4:
   version "4.17.1"
   resolved "https://registry.yarnpkg.com/express/-/express-4.17.1.tgz#4491fc38605cf51f8629d39c2b5d026f98a4c134"
   integrity sha512-mHJ9O79RqluphRrcw2X/GTh3k9tVv8YcoyY4Kkh4WDMUYKRZUq0h1o0w2rrrxBqM7VoeUVqgb27xlEMXTnYt4g==
